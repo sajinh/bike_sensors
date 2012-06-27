@@ -1,9 +1,11 @@
 /**
  * Controls the following sensors
- *  Sensirion SHT15 - tempearature and humidity
- *  Freescale MPX4115A - Absolute pressor
+ *  DHT11 - temperature and humidity sensor
+ *        - cheap price, a bit slow
+ *        - cannot measure below zero C
+ *  Freescale MPX4115A - Absolute pressure
  * 
- * Data is send to serial port for time being
+ * Data can be wired over the Ethernet jack
  */
 
 //Ethernet part
