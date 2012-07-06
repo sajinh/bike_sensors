@@ -13,8 +13,13 @@
 #include <Ethernet.h>
 
 byte mac[] = {  
-  0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
+  0x90, 0xA2, 0xDA, 0x00, 0x2B, 0x1E };
 EthernetServer server(80);
+long interval = 120000;           // sampling interval
+//these are for the geiger counter
+#define ADJUST_COEFFICIENT 1000U
+#define update_time 10000U   // update time 
+#define SAMPL2UPDAT 6  // initial sampling time 
 
 #include "DHT.h"
 #define DHTPIN 5
@@ -27,10 +32,6 @@ DHT dht(DHTPIN, DHTTYPE);
 
 #define USB_BDR 9600U
 
-//these are for the geiger counter
-#define ADJUST_COEFFICIENT 1000U
-#define update_time 100U   // update time 
-#define SAMPL2UPDAT 3  // initial sampling time 
 
 int count = 0;
 unsigned long sampling_time = update_time*SAMPL2UPDAT;
@@ -53,13 +54,16 @@ float slp;
 float elevation = 212.0; // elevation of aizuwakamatsu city
 
 unsigned long previousMillis = 0;        // will store last time samples were taken
-long interval = 10000;           // sampling interval
 
 void setup()
 {
    
    Serial.begin(USB_BDR); // Open serial connection to report values to host
    Serial.println("Starting up");
+   pinMode(7,OUTPUT);
+   digitalWrite(7,HIGH);
+   pinMode(8,OUTPUT);
+   digitalWrite(8,HIGH);
    
    startup_ethernet();
    dht.begin();
@@ -72,16 +76,18 @@ void setup()
    Serial.println("Waiting for geiger counter to take long sample");
    initialize_geiger_sample();
    Serial.println("First sample over");
+     sample_all_data();
+
 }
 
 void loop()
 {
   update_geiger_sample();
   sample_all_data();
-  print_sensor_data();
   EthernetClient client = server.available(); 
   wire_sensor_data(client);
-  
+  print_sensor_data();
+  client.stop();
 }
 
 void sample_all_data(){
@@ -91,7 +97,9 @@ void sample_all_data(){
   if(currentMillis - previousMillis > interval) {  
     sample_dht11_data(); 
     sample_pressure_sensor(elevation);
-    previousMillis = currentMillis;  
+    previousMillis = currentMillis; 
+
+   
   }
  
 }
@@ -99,13 +107,12 @@ void sample_all_data(){
 void print_sensor_data()
 {
    // Print the values to the serial port
-  /*Serial.print("Temperature: ");
+  Serial.print("Temperature: ");
   Serial.print(temp_c, DEC);
   Serial.print("C  ");
-  //Serial.print(temp_f, DEC);
   Serial.print("Humidity: ");
   Serial.print(humidity);
-  Serial.println("%"); */
+  Serial.println("%"); 
   
   Serial.print("Pressure: ");
   Serial.print(pkPa, DEC);
